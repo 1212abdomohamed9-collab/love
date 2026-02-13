@@ -1,155 +1,387 @@
 import { useState, useEffect } from "react";
 
+const introLines = [
+"عايز اقولك كلمتين يا قلبي… انتي اكتر انسانه لمستني قلبي ❤️🌹",
+"كل مره بتكلم معاكي اكني نسيت هموم الدنيا كلها ❤️🌹",
+"بحس اني لقيت حياتي كلها معاكي ❤️🌹",
+"وبتخليني اعيش احسن لحظات حياتي ❤️🌹",
+"بحبك لانك الامان كله ❤️🌹"
+];
+
+const gallery = [
+"/mnt/data/WhatsApp Image 2026-02-13 at 2.11.58 PM (1).jpeg",
+"/mnt/data/WhatsApp Image 2026-02-13 at 2.11.58 PM.jpeg",
+"/mnt/data/WhatsApp Image 2026-02-13 at 2.11.57 PM (4).jpeg",
+"/mnt/data/WhatsApp Image 2026-02-13 at 2.11.57 PM (3).jpeg",
+"/mnt/data/WhatsApp Image 2026-02-13 at 2.11.57 PM (2).jpeg",
+"/mnt/data/WhatsApp Image 2026-02-13 at 2.11.57 PM (1).jpeg",
+"/mnt/data/WhatsApp Image 2026-02-13 at 2.11.57 PM.jpeg",
+"/mnt/data/WhatsApp Image 2026-02-13 at 2.11.56 PM.jpeg"
+];
+
 export default function LoveSite() {
-  const [sec, setSec] = useState(1);
+  const [pass, setPass] = useState("");
+  const [ok, setOk] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [text, setText] = useState("");
+  const [img, setImg] = useState(0);
+  const [hearts, setHearts] = useState([]);
+  const [audio] = useState(new Audio("https://www.bensound.com/bensound-music/bensound-romantic.mp3")); // اغنية بيانو رومانسية
 
-  // توليد قلوب متحركة
-  const hearts = Array.from({ length: 25 });
+  // كتابة تدريجية + موسيقى
+  useEffect(() => {
+    if (!ok) return;
+    
+    audio.volume = 0.3;
+    audio.loop = true;
+    audio.play().catch(e => console.log("Auto-play prevented:", e));
 
-  const Section = ({ id, children }) => (
-    <div className={sec === id ? "section show" : "section"}>
-      {children}
-    </div>
-  );
+    let l = 0, c = 0;
+    const i = setInterval(() => {
+      if (l < introLines.length && c < introLines[l].length) {
+        setText(p => p + introLines[l][c]);
+        c++;
+      } else if (l < introLines.length - 1) {
+        l++;
+        c = 0;
+        setText(p => p + "\n\n");
+      } else if (l === introLines.length - 1 && c === introLines[l].length) {
+        clearInterval(i);
+      }
+    }, 50);
+
+    return () => {
+      clearInterval(i);
+      audio.pause();
+    };
+  }, [ok]);
+
+  // سلايدر الصور
+  useEffect(() => {
+    const s = setInterval(() => setImg(i => (i + 1) % gallery.length), 3000);
+    return () => clearInterval(s);
+  }, []);
+
+  // ورد وقلوب بيطير
+  useEffect(() => {
+    if (!ok) return;
+    
+    const createHeart = () => {
+      const id = Date.now() + Math.random();
+      const size = Math.floor(Math.random() * 30) + 20;
+      const left = Math.random() * 100;
+      const duration = Math.random() * 5 + 5;
+      const type = Math.random() > 0.5 ? '❤️' : '🌹';
+      
+      setHearts(prev => [...prev, {
+        id,
+        size,
+        left,
+        duration,
+        opacity: Math.random() * 0.5 + 0.5,
+        type
+      }]);
+      
+      setTimeout(() => {
+        setHearts(prev => prev.filter(h => h.id !== id));
+      }, duration * 1000);
+    };
+    
+    const interval = setInterval(createHeart, 400);
+    
+    return () => clearInterval(interval);
+  }, [ok]);
+
+  if (!ok) {
+    return (
+      <div className="h-screen flex items-center justify-center relative overflow-hidden"
+        style={{
+          background: "radial-gradient(circle at 30% 50%, #ff9a9e 0%, #fad0c4 100%)"
+        }}>
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 opacity-20">
+          {[...Array(20)].map((_, i) => (
+            <div key={i} 
+              className="absolute text-6xl animate-float-slow"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animation: `floatAround ${Math.random() * 10 + 10}s linear infinite`,
+                transform: `rotate(${Math.random() * 360}deg)`
+              }}>
+              {Math.random() > 0.5 ? '❤️' : '🌹'}
+            </div>
+          ))}
+        </div>
+
+        {/* صندوق الدخول */}
+        <div className="relative bg-white/90 backdrop-blur-md p-12 rounded-[50px] shadow-2xl text-center border-4 border-pink-400 animate-fadeIn"
+          style={{
+            boxShadow: '0 20px 50px rgba(255, 105, 180, 0.5)'
+          }}>
+          <h1 className="text-5xl mb-4 animate-pulse">❤️</h1>
+          <h1 className="text-3xl mb-2 text-pink-600 font-bold">موقع الحب</h1>
+          <h2 className="text-xl mb-8 text-pink-500">ادخل كلمة السر</h2>
+          
+          <input 
+            type="password" 
+            className="border-2 border-pink-300 p-4 rounded-full w-72 text-center focus:outline-none focus:ring-4 focus:ring-pink-300 text-lg"
+            placeholder="اكتب love"
+            value={pass}
+            onChange={e => setPass(e.target.value.toLowerCase())}
+            onKeyPress={e => e.key === 'Enter' && pass === "love" && setOk(true)}
+          />
+          <br/>
+          
+          <button 
+            onClick={() => pass === "love" && setOk(true)}
+            className="bg-gradient-to-r from-pink-500 to-red-500 text-white px-12 py-4 rounded-full mt-8 text-xl shadow-lg hover:shadow-2xl transform hover:scale-110 transition-all duration-300 font-bold"
+          >
+            افتح باب القلب ❤️
+          </button>
+          
+          {pass !== "" && pass !== "love" && (
+            <div className="mt-6 text-red-500 bg-red-100 p-3 rounded-full">
+              ❌ كلمة السر غلط، حاول تاني
+            </div>
+          )}
+          
+          <div className="mt-6 text-pink-400 text-sm">
+            hint: love
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: 0, name: "كلمات", icon: "💌", color: "from-pink-500 to-red-400" },
+    { id: 1, name: "صورنا", icon: "📸", color: "from-purple-500 to-pink-400" },
+    { id: 2, name: "فيديو", icon: "🎥", color: "from-blue-500 to-purple-400" },
+    { id: 3, name: "الاندومي", icon: "🍜", color: "from-yellow-500 to-orange-400" },
+    { id: 4, name: "اغنية", icon: "🎵", color: "from-green-500 to-teal-400" },
+    { id: 5, name: "رسالة", icon: "💝", color: "from-red-500 to-pink-400" }
+  ];
 
   return (
-    <div className="app">
+    <div className="min-h-screen relative overflow-hidden"
+      style={{
+        background: "linear-gradient(145deg, #2b1a2b 0%, #4a2b4a 50%, #6b3f6b 100%)"
+      }}>
 
-      {/* خلفية القلوب */}
-      <div className="hearts">
-        {hearts.map((_, i) => (
-          <span key={i}>🌹</span>
+      {/* ورد وقلوب متحركة */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {hearts.map(heart => (
+          <div
+            key={heart.id}
+            className="absolute animate-float"
+            style={{
+              left: `${heart.left}%`,
+              bottom: '-50px',
+              fontSize: `${heart.size}px`,
+              opacity: heart.opacity,
+              animation: `floatUp ${heart.duration}s linear forwards`,
+              filter: 'drop-shadow(0 0 10px rgba(255, 105, 180, 0.5))'
+            }}
+          >
+            {heart.type}
+          </div>
         ))}
       </div>
 
-      {/* القائمة الجانبية */}
-      <div className="sidebar">
-        <button onClick={() => setSec(1)}>💌 البداية</button>
-        <button onClick={() => setSec(2)}>📸 الصور</button>
-        <button onClick={() => setSec(3)}>🎥 الفيديو</button>
-        <button onClick={() => setSec(4)}>🍜 ذكريات</button>
-        <button onClick={() => setSec(5)}>🎵 الأغنية</button>
-        <button onClick={() => setSec(6)}>❤️ الرسالة</button>
+      {/* نجوم متلألئة */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={`star-${i}`}
+            className="absolute text-yellow-200 animate-twinkle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              fontSize: `${Math.random() * 10 + 5}px`,
+              animation: `twinkle ${Math.random() * 3 + 2}s infinite`,
+              opacity: Math.random() * 0.5 + 0.3
+            }}
+          >
+            ✨
+          </div>
+        ))}
       </div>
 
-      {/* المحتوى */}
-      <div className="content">
+      {/* المحتوى الرئيسي */}
+      <div className="relative z-10 flex flex-col md:flex-row h-screen backdrop-blur-[2px]">
+        
+        {/* التيوب الجانبي بشكل أنيق */}
+        <div className="md:w-72 bg-white/10 backdrop-blur-md p-6 md:h-full flex md:flex-col items-center md:items-stretch gap-3 overflow-x-auto md:overflow-x-visible shadow-2xl border-l-0 md:border-l-4 border-pink-500/50">
+          <h2 className="text-white text-2xl font-bold mb-6 hidden md:block text-center">
+            🌹 فهرس القلب 🌹
+          </h2>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`
+                flex items-center gap-4 px-6 py-4 rounded-2xl text-right transition-all duration-500
+                ${activeTab === tab.id 
+                  ? `bg-gradient-to-r ${tab.color} text-white shadow-xl scale-105` 
+                  : 'bg-white/20 text-pink-100 hover:bg-white/40 hover:scale-102'}
+                w-full md:w-auto text-xl font-medium backdrop-blur-sm
+                transform hover:translate-x-2
+              `}
+            >
+              <span className="text-3xl">{tab.icon}</span>
+              <span className="flex-1 md:block hidden">{tab.name}</span>
+              {activeTab === tab.id && (
+                <span className="animate-pulse text-2xl">❤️</span>
+              )}
+            </button>
+          ))}
+        </div>
 
-        <Section id={1}>
-          <h1>اهلا بيكي يا قلبي ❤️</h1>
-          <p>انتي اجمل حاجه حصلت في حياتي كلها 🌹</p>
-        </Section>
+        {/* المحتوى */}
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto">
+          <div className="max-w-4xl mx-auto">
+            
+            {/* Tab 0: الكلمات */}
+            {activeTab === 0 && (
+              <div className="bg-white/90 backdrop-blur-md p-10 rounded-[60px] shadow-2xl border-4 border-pink-400 animate-fadeIn">
+                <h2 className="text-4xl text-pink-600 mb-6 text-center">💬 كلمات من القلب</h2>
+                <div className="whitespace-pre-line text-right text-gray-800 text-2xl leading-[3rem] font-light">
+                  {text}
+                  <span className="animate-pulse text-3xl">❤️</span>
+                </div>
+              </div>
+            )}
 
-        <Section id={2}>
-          <img src="https://i.imgur.com/Z8dZ4.jpg" className="img"/>
-        </Section>
+            {/* Tab 1: الصور */}
+            {activeTab === 1 && (
+              <div className="bg-white/90 backdrop-blur-md p-10 rounded-[60px] shadow-2xl border-4 border-pink-400 animate-fadeIn">
+                <h2 className="text-4xl text-pink-600 mb-6 text-center">📸 ذكرياتنا الجميلة</h2>
+                <div className="relative group">
+                  <img 
+                    src={gallery[img]} 
+                    className="mx-auto rounded-[40px] shadow-2xl max-h-[500px] w-auto border-8 border-pink-200 transform group-hover:scale-105 transition-all duration-500"
+                    alt="ذكرى"
+                  />
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-pink-600 to-red-500 text-white px-6 py-3 rounded-full text-lg shadow-lg">
+                    {img + 1} / {gallery.length} ❤️
+                  </div>
+                </div>
+              </div>
+            )}
 
-        <Section id={3}>
-          <video controls width="500">
-            <source src="YOUR_VIDEO_LINK.mp4" />
-          </video>
-        </Section>
+            {/* Tab 2: الفيديو */}
+            {activeTab === 2 && (
+              <div className="bg-white/90 backdrop-blur-md p-10 rounded-[60px] shadow-2xl border-4 border-pink-400 animate-fadeIn">
+                <h2 className="text-4xl text-pink-600 mb-6 text-center">🎥 فيديو خاص</h2>
+                <video controls className="mx-auto rounded-[40px] shadow-2xl border-8 border-pink-200 w-full">
+                  <source src="/mnt/data/WhatsApp Video 2026-02-13 at 2.11.18 PM (1).mp4" />
+                </video>
+              </div>
+            )}
 
-        <Section id={4}>
-          <h2>ذكرياتنا الجميلة 🍜</h2>
-        </Section>
+            {/* Tab 3: الاندومي */}
+            {activeTab === 3 && (
+              <div className="bg-white/90 backdrop-blur-md p-10 rounded-[60px] shadow-2xl border-4 border-pink-400 animate-fadeIn">
+                <h2 className="text-4xl text-pink-600 mb-6 text-center">🍜 ذكريات الاندومي</h2>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <img src="/mnt/data/WhatsApp Image 2026-02-13 at 2.09.03 PM (1).jpeg" 
+                    className="rounded-[40px] shadow-2xl border-8 border-pink-200 hover:scale-105 transition-all duration-500"
+                    alt="اندومي 1"
+                  />
+                  <img src="/mnt/data/WhatsApp Image 2026-02-13 at 2.09.03 PM.jpeg" 
+                    className="rounded-[40px] shadow-2xl border-8 border-pink-200 hover:scale-105 transition-all duration-500"
+                    alt="اندومي 2"
+                  />
+                </div>
+              </div>
+            )}
 
-        <Section id={5}>
-          <iframe
-            width="560"
-            height="315"
-            src="https://www.youtube.com/embed/Dgs2h3dCtLw"
-          ></iframe>
-        </Section>
+            {/* Tab 4: الأغنية */}
+            {activeTab === 4 && (
+              <div className="bg-white/90 backdrop-blur-md p-10 rounded-[60px] shadow-2xl border-4 border-pink-400 animate-fadeIn">
+                <h2 className="text-4xl text-pink-600 mb-6 text-center">🎵 اغنية خاصة</h2>
+                <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-[40px] shadow-2xl border-8 border-pink-200">
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    className="absolute top-0 left-0"
+                    src="https://www.youtube.com/embed/Dgs2h3dCtLw?autoplay=0&mute=0"
+                    title="YouTube video"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
 
-        <Section id={6}>
-          <h2>انا بحبك اوي ❤️🌹</h2>
-          <p>انتي حياتي كلها وعمري كله 🌹</p>
-        </Section>
-
+            {/* Tab 5: الرسالة */}
+            {activeTab === 5 && (
+              <div className="bg-white/90 backdrop-blur-md p-10 rounded-[60px] shadow-2xl border-4 border-pink-400 animate-fadeIn">
+                <h2 className="text-4xl text-pink-600 mb-6 text-center">💝 رسالة حب</h2>
+                <div className="bg-gradient-to-br from-pink-100 via-red-100 to-pink-100 p-10 rounded-[40px] leading-10 text-2xl text-right shadow-inner border-2 border-pink-300">
+                  {[
+                    "❤️ انا بحبك اوي مش مجرد حب اي حد ممكن يحب بس انا بعشقك",
+                    "❤️ شايفك كل حياتي و عمري الجاي",
+                    "❤️ وجودك جمبي بيرحيني",
+                    "❤️ مش محتاج حاجه من الدنيا غيرك",
+                    "❤️ شايفك عنيا و حياتي كلها",
+                    "❤️ و ان شاء الله اشوفك احسن دكتوره فالدنيا"
+                  ].map((line, i) => (
+                    <p key={i} className="mb-6 hover:scale-105 transition-transform duration-300">
+                      {line} 🌹
+                    </p>
+                  ))}
+                  <div className="text-center text-7xl mt-10 animate-pulse">
+                    ❤️
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* CSS */}
-      <style>{`
-
-      body{
-        margin:0;
-        font-family: Arial;
-        overflow:hidden;
-      }
-
-      .app{
-        display:flex;
-        height:100vh;
-        background:#5a0000;
-        color:white;
-      }
-
-      .sidebar{
-        width:200px;
-        background:#3b0000;
-        display:flex;
-        flex-direction:column;
-        padding:20px;
-      }
-
-      .sidebar button{
-        margin:10px 0;
-        padding:12px;
-        border:none;
-        background:#8b0000;
-        color:white;
-        cursor:pointer;
-        border-radius:10px;
-        transition:.3s;
-      }
-
-      .sidebar button:hover{
-        background:red;
-        transform:scale(1.1);
-      }
-
-      .content{
-        flex:1;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        position:relative;
-      }
-
-      .section{
-        position:absolute;
-        opacity:0;
-        transform:translateY(50px);
-        transition:1s;
-      }
-
-      .show{
-        opacity:1;
-        transform:translateY(0);
-      }
-
-      .img{
-        max-height:400px;
-        border-radius:20px;
-      }
-
-      /* الورد المتحرك */
-      .hearts span{
-        position:absolute;
-        font-size:25px;
-        animation: float 8s linear infinite;
-      }
-
-      .hearts span:nth-child(n){
-        left:calc(100% * var(--i));
-      }
-
-      @keyframes float{
-        0%{transform:translateY(100vh) rotate(0)}
-        100%{transform:translateY(-10vh) rotate(360deg)}
-      }
-
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes floatUp {
+          0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
+          100% { transform: translateY(-100vh) rotate(20deg); opacity: 0; }
+        }
+        
+        @keyframes floatAround {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          25% { transform: translate(20px, -40px) rotate(20deg); }
+          50% { transform: translate(-20px, -80px) rotate(-20deg); }
+          75% { transform: translate(-30px, -120px) rotate(30deg); }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.5); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-out;
+        }
+        
+        .animate-float {
+          animation: floatUp forwards;
+        }
+        
+        .animate-float-slow {
+          animation: floatAround linear infinite;
+        }
+        
+        .animate-twinkle {
+          animation: twinkle ease-in-out infinite;
+        }
       `}</style>
     </div>
   );
